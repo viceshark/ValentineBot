@@ -3,10 +3,10 @@ name: Run Tests
 on:
   push:
     branches:
-      - main  # Запускать тесты при пуше в ветку main
+      - master  # Запускать тесты при пуше в ветку main
   pull_request:
     branches:
-      - main  # Запускать тесты при создании пул-реквеста в ветку main
+      - master  # Запускать тесты при создании пул-реквеста в ветку main
 
 jobs:
   test:
