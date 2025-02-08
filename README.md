@@ -8,6 +8,7 @@ python -m venv .venv
 
 # Установка зависимостей
 pip install -r requirements.txt
+pip install pytest pytest-asyncio
 
 # Указать токен бота
 в .env в BOT_TOKEN указать токен бота в телеграм
@@ -17,3 +18,6 @@ python database.py
 
 # Запуск бота
 python main.py
+
+# Запуск тестов
+pytest tests/
