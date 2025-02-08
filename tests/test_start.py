@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from main import start
+from handlers import start
 
 class TestStartCommand(unittest.TestCase):
     def setUp(self):

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from main import send_valentine_menu, handle_attached_image
+from handlers import valentine
 
 class TestValentineSending(unittest.TestCase):
     def setUp(self):
@@ -19,7 +19,7 @@ class TestValentineSending(unittest.TestCase):
     async def test_send_valentine_menu(self, mock_get_users):
         mock_get_users.return_value = [(456, "user1"), (789, "user2")]
 
-        await send_valentine_menu(self.update, self.context)
+        await valentine.send_valentine_menu(self.update, self.context)
 
         self.update.callback_query.edit_message_text.assert_called_with("Выбери получателя:")
 
@@ -30,7 +30,7 @@ class TestValentineSending(unittest.TestCase):
         self.update.message.photo = [photo]
         self.context.user_data = {'receiver_id': 456, 'message': "Тестовое сообщение"}
 
-        await handle_attached_image(self.update, self.context)
+        await valentine.handle_attached_image(self.update, self.context)
 
         mock_save_valentine.assert_called_with(123, 456, "Тестовое сообщение", "attached", "user_images/photo_id.jpg")
 
