@@ -3,7 +3,6 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, ConversationHandler
 
-from handlers.start import send_start_menu, start
 from states import MessageState
 from database import get_users, save_valentine, get_username_by_id
 
@@ -17,13 +16,13 @@ async def send_valentine_menu(update: Update, context: CallbackContext):
     users = [user for user in users if user[0] != current_user_id]
 
     if not users:
-        await query.edit_message_text("Нет зарегистрированных пользователей для отправки валентинки.")
+        await query.edit_message_text("Нет зарегистрированных пользователей для отправки валентинки. Жми /start")
         return ConversationHandler.END
 
     keyboard = []
     for user in users:
         keyboard.append([InlineKeyboardButton(user[1], callback_data=f"user_{user[0]}")])
-
+    keyboard.append([InlineKeyboardButton("Передумал", callback_data="cancel")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.edit_message_text("Выбери получателя:", reply_markup=reply_markup)
     return MessageState.WAITING_FOR_MESSAGE
@@ -40,30 +39,13 @@ async def choose_receiver(update: Update, context: CallbackContext):
 async def handle_message(update: Update, context: CallbackContext):
     message = update.message.text
     context.user_data['message'] = message
-
-    keyboard = [
-        [InlineKeyboardButton("Приложить свою картинку", callback_data="attach_image")],
-        # TODO: Починить выбор из предложенных. Дб выбор из любых картинок в директории
-        # [InlineKeyboardButton("Выбрать из предложенных", callback_data="select_image")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("  😽 😽 😽 Выбери способ отправки картинки  😽 😽 😽:", reply_markup=reply_markup)
-    return MessageState.WAITING_FOR_IMAGE_TYPE
-
-async def choose_image_type(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await query.answer()
-
-    image_type = query.data
-    context.user_data['image_type'] = image_type
-
-    if image_type == "attach_image":
-        await query.edit_message_text("Приложи свою картинку сладкий 😽:")
-        return MessageState.WAITING_FOR_ATTACHED_IMAGE
+    logger.info(f"Message set to: {message}")
+    await update.message.reply_text("Приложи свою картинку сладкий 😽:")
+    return MessageState.WAITING_FOR_ATTACHED_IMAGE
 
 async def handle_attached_image(update: Update, context: CallbackContext):
     photo_file = update.message.photo[-1]
-    file_path = f"user_images/{photo_file.file_id}.jpg"
+    file_path = f"resources/user_images/{photo_file.file_id}.jpg"
     new_file = await photo_file.get_file()
     await new_file.download_to_drive(file_path)
 
@@ -86,7 +68,7 @@ async def handle_attached_image(update: Update, context: CallbackContext):
     except Exception as e:
         logger.error(f"Не удалось отправить сообщение получателю: {e}")
     receiver_username = get_username_by_id(receiver_id)
-    await update.message.reply_text("💞 💞 💞 Твое сладкое послание доставлено получателю! 💞 💞 💞")
+    await update.message.reply_text("💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞  Твое послание доставлено получателю! 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞 💞")
     await update.message.reply_text("Чекай что получилось:")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -97,10 +79,9 @@ async def handle_attached_image(update: Update, context: CallbackContext):
         photo=photo_file.file_id,
         caption=message
     )
-    # Предлагаем вернуться в меню
     keyboard = [
-        [InlineKeyboardButton("Вернуться в меню", callback_data="start")]
+        [InlineKeyboardButton("Дело сделано, босс!", callback_data="cancel")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Что дальше?", reply_markup=reply_markup)
+    await update.message.reply_text("Ты булочка 🐶", reply_markup=reply_markup)
     return ConversationHandler.END

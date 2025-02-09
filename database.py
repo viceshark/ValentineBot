@@ -26,7 +26,6 @@ def register_user(user_id, username):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
         existing_user = cursor.fetchone()
-        #TODO: не выводить юзеру, писать только в лог
         if existing_user:
             raise ValueError("Вы уже зарегистрированы!")
         cursor.execute("INSERT INTO users (user_id, username, registration_date) VALUES (?, ?, ?)",
