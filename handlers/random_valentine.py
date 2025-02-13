@@ -19,54 +19,44 @@ async def send_random_valentine(update: Update, context: CallbackContext):
     await query.answer()  # Подтверждаем обработку callback
 
     try:
-        #TODO:Вынеси в отдельную функуцию формирование уникальных валентинок
+        # Инициализируем хранилище отправленных картинок для пользователя
+        if "sent_images" not in context.user_data:
+            context.user_data["sent_images"] = []
 
-        # Инициализируем хранилище отправленных комбинаций
-        if "sent_valentines" not in context.user_data:
-            context.user_data["sent_valentines"] = []
-
-        # Получаем все возможные комбинации
+        # Получаем все доступные картинки
         images = [f for f in os.listdir(IMAGES_DIR) if f.endswith(('.jpg', '.png'))]
-        phrases = VALENTINE_PHRASES
-        all_combinations = list(itertools.product(images, phrases))
 
-        if not all_combinations:
-            await query.message.reply_text("😢 Нет доступных валентинок")
+        if not images:
+            await query.message.reply_text("😢 Нет доступных картинок")
             return
 
-        # Исключаем уже отправленные комбинации
-        available = [c for c in all_combinations
-                     if c not in context.user_data["sent_valentines"]]
+        # Исключаем уже отправленные картинки
+        available = [img for img in images if img not in context.user_data["sent_images"]]
 
-        # Если все комбинации исчерпаны - начинаем сначала
+        # Если все картинки исчерпаны - начинаем сначала
         if not available:
-            available = all_combinations
-            context.user_data["sent_valentines"] = []
+            available = images
+            context.user_data["sent_images"] = []
 
-        # Выбираем случайную комбинацию
-        selected_image, selected_phrase = random.choice(available)
-        context.user_data["sent_valentines"].append((selected_image, selected_phrase))
+        # Выбираем случайную картинку
+        selected_image = random.choice(available)
+        context.user_data["sent_images"].append(selected_image)
 
-        # Отправляем валентинку
+        # Отправляем картинку
         image_path = os.path.join(IMAGES_DIR, selected_image)
         with open(image_path, "rb") as photo:
             await query.message.reply_photo(
                 photo=InputFile(photo),
-                caption=selected_phrase
             )
 
-            # Кнопки после отправки
-            keyboard = [
-                [InlineKeyboardButton("🔄 Хочу еще", callback_data="random_valentine")],
-                [InlineKeyboardButton("Сдаться", callback_data="cancel")],
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text("Что дальше?", reply_markup=reply_markup)
-
-            # Переходим в состояние ожидания повтора
-            return MessageState.WAITING_FOR_RANDOM_VALENTINE
+        # Добавляем кнопки после отправки картинки
+        keyboard = [
+            [InlineKeyboardButton("🔄 Хочу еще", callback_data="random_valentine")],
+            [InlineKeyboardButton("❌ Сдаться", callback_data="cancel")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.reply_text("Что дальше?", reply_markup=reply_markup)
 
     except Exception as e:
         logger.error(f"Ошибка: {e}")
-        await query.message.reply_text("❌ Не удалось отправить валентинку")
-        return ConversationHandler.END
+        await query.message.reply_text("Валентинки кончились 😭")
