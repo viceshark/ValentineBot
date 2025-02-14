@@ -8,7 +8,9 @@ from telegram.ext import CallbackContext, ConversationHandler
 from phrases import VALENTINE_PHRASES
 from states import MessageState
 
-IMAGES_DIR = "resources/images"
+
+# t.vasiliev    Исправил директорию с изображениями
+IMAGES_DIR = "images"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -34,14 +36,16 @@ async def send_random_valentine(update: Update, context: CallbackContext):
         available = [img for img in images if img not in context.user_data["sent_images"]]
 
         # Если все картинки исчерпаны - начинаем сначала
-        if not available:
-            available = images
-            context.user_data["sent_images"] = []
+        # t.vasiliev    Исправил баг бесконечных валентинок
+        # if not available:
+        #     available = images
+        #     context.user_data["sent_images"] = []
 
         # Выбираем случайную картинку
         selected_image = random.choice(available)
         context.user_data["sent_images"].append(selected_image)
-
+        logger.info("Картинки пользователя:")
+        logger.info(context.user_data["sent_images"])
         # Отправляем картинку
         image_path = os.path.join(IMAGES_DIR, selected_image)
         with open(image_path, "rb") as photo:
